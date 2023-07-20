@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { attachments } from './seed';
 import { CacheManagerService } from 'src/caching/cache-manager.service';
+import { CachePrefix } from 'src/caching/cache-prefix.enum';
+import { AttachmentDto } from './attachment.dto';
 
 @Injectable()
 export class AttachmentsService {
@@ -11,38 +13,41 @@ export class AttachmentsService {
     return listAttachments;
   }
   async listAttachmentsByIntegrations(integrationIds: string[]) {
-    const cacheAttachments = [];
+    const cacheAttachments: AttachmentDto[] = [];
+    const cacheMisses: string[] = [];
     for (const id of integrationIds) {
       const att = await this.cacheManagerService.getCacheData(
-        `integration_att_${id}`,
+        `${CachePrefix.INTEGRATION_ATT}_${id}`,
       );
       if (att) {
-        cacheAttachments.push(att);
+        cacheAttachments.push(att as AttachmentDto);
+      } else {
+        cacheMisses.push(id);
       }
     }
     console.log('Busco los attachments en cache');
 
-    if (cacheAttachments.length > 0) {
-      console.log('Retorno attachments del cache');
+    if (cacheAttachments.length === integrationIds.length) {
+      console.log('Encontre todos los attachment en el cache , los retorno');
       return cacheAttachments;
     }
 
+    console.log('Hago la consulta para las attachments no encontrados');
     const attachmentsByIntegrations = attachments.filter((attachment) =>
-      integrationIds.includes(attachment.integrationId),
+      cacheMisses.includes(attachment.integrationId),
     );
-    console.log('No se encontraron coincidencias, hago la consulta a la db');
-    for (const id of integrationIds) {
+    for (const id of cacheMisses) {
       await this.cacheManagerService.setCacheData(
-        `integration_att_${id}`,
+        `${CachePrefix.INTEGRATION_ATT}_${id}`,
         attachmentsByIntegrations.filter(
           (attachment) => attachment.integrationId === id,
         ),
-        5000,
+        15000,
       );
     }
     console.log('Almaceno los attachments en cache');
     console.log('Retorne attachments de query');
-    return attachmentsByIntegrations;
+    return [...attachmentsByIntegrations, ...cacheAttachments];
   }
 
   async listAttachmentsByTags(tagIds: string[]) {

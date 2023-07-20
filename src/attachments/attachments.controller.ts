@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AttachmentsService } from './attachments.service';
 
 @Controller('attachments')
@@ -10,19 +10,13 @@ export class AttachmentsController {
     return this.attachmentsService.listAttachments();
   }
 
-  @Get('/integrations')
-  async getIntegrationsAttachments() {
-    return this.attachmentsService.listAttachmentsByIntegrations(['a', 'b']);
+  @Post('/integrations')
+  async getIntegrationsAttachments(@Body() input: { ids: string[] }) {
+    return this.attachmentsService.listAttachmentsByIntegrations(input.ids);
   }
 
-  @Get('/tags')
-  async getTagsAttachments() {
-    return this.attachmentsService.listAttachmentsByTags([
-      'f',
-      'g',
-      'h',
-      'i',
-      'j',
-    ]);
+  @Post('/tags')
+  async getTagsAttachments(@Body() input: { ids: string[] }) {
+    return this.attachmentsService.listAttachmentsByTags(input.ids);
   }
 }
