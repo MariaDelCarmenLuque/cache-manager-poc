@@ -30,7 +30,7 @@ export class AttachmentsService {
     const attachmentsByIntegrations = attachments.filter((attachment) =>
       integrationIds.includes(attachment.integrationId),
     );
-    console.log('No se encontraron coincidencias, hago la consulta a la db')
+    console.log('No se encontraron coincidencias, hago la consulta a la db');
     for (const id of integrationIds) {
       await this.cacheManagerService.setCacheData(
         `integration_att_${id}`,

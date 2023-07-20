@@ -1,5 +1,9 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { AttachmentDto } from 'src/attachments/attachment.dto';
 
@@ -20,6 +24,15 @@ export class CacheManagerService {
       await this.cacheManager.set(key, value, expires);
     } catch (error) {
       console.log('Error set cache data', error);
+    }
+  }
+
+  async clearCacheData() {
+    try {
+      await this.cacheManager.reset();
+      return 'Application cache deleted successfully';
+    } catch (error) {
+      throw new UnprocessableEntityException(error);
     }
   }
 }
